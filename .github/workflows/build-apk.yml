@@ -1,0 +1,51 @@
+name: AzePSP APK Build
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Kodu indir
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Java 17 kur
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Android SDK kur
+        uses: android-actions/setup-android@v3
+
+      - name: Android bileşenleri kur
+        run: |
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager "platform-tools" "build-tools;36.0.0" "platforms;android-36" "ndk;29.0.14206865"
+
+      - name: Gradlew icazəsi ver
+        run: chmod +x ./gradlew
+
+      - name: local.properties yaz
+        run: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+          echo "ndk.dir=$ANDROID_SDK_ROOT/ndk/29.0.14206865" >> local.properties
+
+      - name: Debug APK derle
+        run: ./gradlew assembleNormalDebug --no-daemon --stacktrace
+        env:
+          GRADLE_OPTS: "-Xmx6g -XX:+UseG1GC"
+
+      - name: APK-i yükle (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: AzePSP-debug-apk
+          path: android/build/outputs/apk/normal/debug/app-normal-debug.apk
+          retention-days: 30
