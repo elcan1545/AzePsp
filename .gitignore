@@ -158,5 +158,7 @@ cmake-build-*/
 build/
 *.zip
 *.tar.gz
-*.jar
 local.properties
+# Jar dosyalari (gradle-wrapper.jar haric)
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
